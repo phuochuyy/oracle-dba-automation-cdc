@@ -30,26 +30,27 @@
          | items2dict(key_name=0, value_name=1)
          | combine({'net_encryption': 'REQUIRED' if sqlnet_enc.rc == 0 else 'not required'}) }}
 
+# thresholds cast to numbers: values passed with -e on the command line arrive as strings
 - name: Evaluate against the thresholds
   vars:
     is_standby: "{{ health.role is defined and 'STANDBY' in health.role }}"
     fra: "{{ health.fra_pct | default(-1) | int }}"
     lag: "{{ [health.apply_lag_s | default(-1) | float, health.transport_lag_s | default(-1) | float] | max }}"
     crit: >-
-      {{ (['FRA ' ~ fra ~ ' %'] if fra | int >= fra_crit_pct else [])
-       + (['lag ' ~ lag ~ ' s'] if is_standby and lag | float >= lag_crit_s else [])
+      {{ (['FRA ' ~ fra ~ ' %'] if fra | int >= fra_crit_pct | float else [])
+       + (['lag ' ~ lag ~ ' s'] if is_standby and lag | float >= lag_crit_s | float else [])
        + (['standby dest ' ~ health.standby_dest] if not is_standby and health.standby_dest | default('none') not in ['none', 'VALID'] else [])
        + (['wallet ' ~ health.wallet ~ ' with ' ~ health.encrypted_ts ~ ' encrypted tablespaces'] if health.encrypted_ts | default('0') | int > 0
             and health.wallet | default('') is not search('^OPEN/AUTOLOGIN') else [])
        + (['no backup for ' ~ health.backup_age_h ~ ' h'] if inventory_hostname in groups['backup_hosts']
-            and (health.backup_age_h | default(-1) | float < 0 or health.backup_age_h | float > backup_max_h) else [])
+            and (health.backup_age_h | default(-1) | float < 0 or health.backup_age_h | float > backup_max_h | float) else [])
        + (['SQL output missing'] if health.role is not defined else []) }}
     warn: >-
-      {{ (['FRA ' ~ fra ~ ' %'] if fra_warn_pct <= fra | int < fra_crit_pct else [])
+      {{ (['FRA ' ~ fra ~ ' %'] if fra_warn_pct | float <= fra | int < fra_crit_pct | float else [])
        + (['tablespaces > 85 %: ' ~ health.ts_over_85] if health.ts_over_85 | default('0') is not search('^0') else [])
        + (['invalid objects ' ~ health.invalid_objects] if health.invalid_objects | default('0') | int > 0 else [])
        + (['no TDE (no encrypted tablespace)'] if health.encrypted_ts | default('0') | int == 0 else [])
-       + (['failed logons 1h ' ~ health.failed_logons_1h] if health.failed_logons_1h | default('0') | int > failed_logons_warn else [])
+       + (['failed logons 1h ' ~ health.failed_logons_1h] if health.failed_logons_1h | default('0') | int > failed_logons_warn | float else [])
        + (['network encryption not required'] if health.net_encryption != 'REQUIRED' else []) }}
   ansible.builtin.set_fact:
     health_status:
