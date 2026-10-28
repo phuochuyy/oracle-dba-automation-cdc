@@ -1,0 +1,29 @@
+# What the daily report looks at. No secrets here: passwords come from the Ansible Vault of 01-ansible.
+# DSNs list both RAC nodes (Easy Connect Plus host list); a database that is not running shows as DOWN.
+thresholds: ../01-ansible/group_vars/all/main.yml     # same thresholds as the Ansible health check
+
+databases:
+  - name: orcl
+    region: A
+    dsn: "192.168.104.10,192.168.104.11:1521/orcl.rac?connect_timeout=3&transport_connect_timeout=3"
+    backups_here: false        # RAC A backs up on its standby
+  - name: orcl_stb
+    region: A
+    dsn: "192.168.105.10,192.168.105.11:1521/orcl_stb.rac?connect_timeout=3&transport_connect_timeout=3"
+    backups_here: true
+  - name: orcl3
+    region: B
+    dsn: "192.168.106.10:1521/orcl3.rac?connect_timeout=3&transport_connect_timeout=3"
+    backups_here: true
+  - name: orcl3_stb
+    region: B
+    dsn: "192.168.107.10:1521/orcl3_stb.rac?connect_timeout=3&transport_connect_timeout=3"
+    backups_here: false
+
+# GoldenGate deployments: the admin server listens on 127.0.0.1:9101 of the node that runs the deployment
+# (it moves with the Data Guard role), so the report asks each candidate node over SSH.
+goldengate:
+  - deployment: GG_A
+    nodes: [prm1, prm2, stb1, stb2]
+  - deployment: GG_B
+    nodes: [prm3, stb3]

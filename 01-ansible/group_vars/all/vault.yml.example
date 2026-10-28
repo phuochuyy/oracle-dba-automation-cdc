@@ -1,3 +1,5 @@
 # copy to vault.yml, set the passwords, then: ansible-vault encrypt vault.yml
 vault_user_passwords:
   report_ro: ""
+  "c##mon": ""
+vault_ogg_admin_password: ""
