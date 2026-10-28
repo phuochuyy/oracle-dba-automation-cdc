@@ -2,4 +2,5 @@
 vault_user_passwords:
   report_ro: ""
   "c##mon": ""
+  "c##dbzuser": ""
 vault_ogg_admin_password: ""
