@@ -1,0 +1,29 @@
+# Desired state of roles and users (group_vars/all/users.yml) on this host's PDBs. Idempotent: a second
+# run changes nothing. The SQL (with the password) goes on stdin and is never logged.
+- name: Roles and users for this host
+  ansible.builtin.set_fact:
+    pdbs_here: "{{ ((db_roles | selectattr('host', 'equalto', inventory_hostname) | map(attribute='pdb') | list)
+                  + (db_users | selectattr('host', 'equalto', inventory_hostname) | map(attribute='pdb') | list)) | unique }}"
+
+- name: Apply desired state per PDB
+  ansible.builtin.shell: |
+    . ~/.bash_profile >/dev/null 2>&1
+    export ORACLE_SID={{ oracle_sid }}
+    sqlplus -s / as sysdba
+  args:
+    stdin: "{{ lookup('ansible.builtin.template', 'user.sql.j2') }}"
+  vars:
+    pdb: "{{ item }}"
+    roles_here: "{{ db_roles | selectattr('host', 'equalto', inventory_hostname) | selectattr('pdb', 'equalto', item) | list }}"
+    users_here: "{{ db_users | selectattr('host', 'equalto', inventory_hostname) | selectattr('pdb', 'equalto', item) | list }}"
+  loop: "{{ pdbs_here }}"
+  register: applied
+  changed_when: applied.stdout is search('CHANGED:')
+  no_log: true
+
+- name: What changed
+  ansible.builtin.debug:
+    msg: "{{ item.item }}: {{ item.stdout_lines | select('search', 'CHANGED:') | list or ['in desired state'] }}"
+  loop: "{{ applied.results }}"
+  loop_control:
+    label: "{{ item.item }}"

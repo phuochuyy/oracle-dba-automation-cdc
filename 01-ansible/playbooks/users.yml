@@ -1,0 +1,13 @@
+# Database roles/users as code. usage (from 01-ansible/):
+#   ansible-playbook playbooks/users.yml --vault-password-file ~/.vault_pass_dba
+- name: Roles and users
+  hosts: db
+  gather_facts: false
+  ignore_unreachable: true
+  tasks:
+    - name: Only hosts that have something to do
+      ansible.builtin.meta: end_host
+      when: (db_roles + db_users) | selectattr('host', 'equalto', inventory_hostname) | list | length == 0
+    - name: Apply
+      ansible.builtin.include_role:
+        name: oracle_user
