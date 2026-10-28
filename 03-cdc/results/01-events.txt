@@ -1,0 +1,5 @@
+# INSERT, UPDATE, DELETE of one row in GGREPL APP.CDC_EVENTS -> topic orcl3.APP.CDC_EVENTS
+CreateTime:1793204762658 op=c before= None after= {'SEQ': '1', 'AMOUNT': '250.00', 'NOTE': 'insert'} scn= 32575132 commit_scn= 32575133
+CreateTime:1793204762659 op=u before= {'SEQ': '1', 'AMOUNT': '250.00', 'NOTE': 'insert'} after= {'SEQ': '1', 'AMOUNT': '300.00', 'NOTE': 'update'} scn= 32575138 commit_scn= 32575139
+CreateTime:1793204762659 op=d before= {'SEQ': '1', 'AMOUNT': '300.00', 'NOTE': 'update'} after= None scn= 32575141 commit_scn= 32575155
+CreateTime:1793204762659 tombstone (delete marker for compaction)
