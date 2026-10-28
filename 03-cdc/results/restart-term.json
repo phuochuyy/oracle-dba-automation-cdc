@@ -1,0 +1,34 @@
+{
+  "mode": "restart",
+  "action": "term",
+  "rows": 300,
+  "rate_per_s": 10.0,
+  "seq_range": [
+    5573000,
+    5573300
+  ],
+  "events": [
+    " 10.0 s  Kafka Connect TERM (pid 19323)",
+    " 20.0 s  Kafka Connect start"
+  ],
+  "debezium": {
+    "received": 300,
+    "missing": 0,
+    "duplicated_rows": 0,
+    "extra_events": 0,
+    "p50_ms": 6706,
+    "p95_ms": 20102,
+    "p99_ms": 21300,
+    "max_ms": 21599,
+    "mean_ms": 8467
+  },
+  "goldengate": {
+    "received": 300,
+    "missing": 0,
+    "p50_ms": 3893,
+    "p95_ms": 4756,
+    "p99_ms": 5173,
+    "max_ms": 5372,
+    "mean_ms": 3871
+  }
+}

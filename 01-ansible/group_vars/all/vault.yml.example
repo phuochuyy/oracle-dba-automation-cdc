@@ -3,4 +3,6 @@ vault_user_passwords:
   report_ro: ""
   "c##mon": ""
   "c##dbzuser": ""
+  cdc_writer: ""
+  cdc_reader: ""
 vault_ogg_admin_password: ""
