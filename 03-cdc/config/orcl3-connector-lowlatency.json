@@ -1,0 +1,22 @@
+{
+  "connector.class": "io.debezium.connector.oracle.OracleConnector",
+  "tasks.max": "1",
+  "database.url": "jdbc:oracle:thin:@//192.168.106.10:1521/orcl3.rac",
+  "database.dbname": "ORCL3",
+  "database.pdb.name": "GGREPL",
+  "database.user": "c##dbzuser",
+  "database.password": "${file:/home/huy/opt/cdc/secrets/dbz.properties:password}",
+  "topic.prefix": "orcl3",
+  "table.include.list": "APP.CDC_EVENTS",
+  "log.mining.strategy": "online_catalog",
+  "snapshot.mode": "initial",
+  "snapshot.locking.mode": "none",
+  "schema.history.internal.kafka.bootstrap.servers": "localhost:9092",
+  "schema.history.internal.kafka.topic": "schema-history.orcl3",
+  "decimal.handling.mode": "string",
+  "time.precision.mode": "connect",
+  "log.mining.sleep.time.default.ms": "100",
+  "log.mining.sleep.time.min.ms": "0",
+  "log.mining.sleep.time.max.ms": "500",
+  "log.mining.sleep.time.increment.ms": "100"
+}
