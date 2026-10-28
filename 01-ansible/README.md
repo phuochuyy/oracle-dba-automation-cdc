@@ -56,6 +56,24 @@ Result ([`results/`](results/), `patches-*.md`):
   are registered but no longer on disk (old GoldenGate installs). Left as they are; cleanup is
   `runInstaller -detachHome ORACLE_HOME=<path>` as the inventory owner, after checking nothing uses them.
 
+## Roles and users as code — [`playbooks/users.yml`](playbooks/users.yml)
+
+Desired state in [`group_vars/all/users.yml`](group_vars/all/users.yml) (role `bank_read` with SELECT on the
+BANK tables, user `report_ro` with profile `sec_admin_profile`), passwords in an **Ansible Vault** file that
+is not in git ([`vault.yml.example`](group_vars/all/vault.yml.example); vault password file outside the
+repo). The role renders one PL/SQL block per PDB that only executes what is missing and prints
+`CHANGED: <statement>` (the password masked); the SQL goes on stdin with `no_log`, so the password is
+neither in `ps` nor in the Ansible output. Password set on creation only (like `update_password: on_create`).
+
+| Run | Result |
+|-----|--------|
+| 1 | role created, 5 grants, user created, `create session`, role granted — `changed=1` |
+| 2 | `in desired state` — **`changed=0`** |
+| drift: `revoke select on bank.accounts from bank_read` by hand, run 3 | only `grant select on bank.accounts to bank_read` — [`results/users-run.log`](results/users-run.log) |
+
+`report_ro` then reads `CARDS` and gets `************0018`: the redaction policy from the security lab
+applies, since the role has no `CARD_FULL_VIEW`.
+
 ## Mistakes on the way
 
 - First run counted failed logons over 24 h: 488–1,034 per host, nearly all from before the observer fix
