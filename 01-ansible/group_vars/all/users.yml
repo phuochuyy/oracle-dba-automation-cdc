@@ -17,3 +17,20 @@ db_users:
     profile: sec_admin_profile
     roles: [bank_read]
     system_privs: [create session]
+
+  # read-only monitoring user for the Python daily report (02-python): dictionary views, audit trail
+  # (no SELECT ANY DICTIONARY — the security lab's assessment flags it)
+  - name: c##mon
+    pdb: cdb$root
+    host: prm1
+    profile: c##svc_profile        # created by the security lab (no expiry: password in a vault)
+    roles: [select_catalog_role, audit_viewer]
+    system_privs: [create session]
+    container_data: all
+  - name: c##mon
+    pdb: cdb$root
+    host: prm3
+    profile: default               # Region B was not hardened (see 01-ansible health check)
+    roles: [select_catalog_role, audit_viewer]
+    system_privs: [create session]
+    container_data: all
