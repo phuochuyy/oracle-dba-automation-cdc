@@ -1,0 +1,57 @@
+# Health facts of one database host -> `health` (dict) and `health_status` (OK/WARN/CRIT + reasons)
+- name: Is the host up? (most VMs are off in any lab scenario)
+  ansible.builtin.ping:
+  register: alive
+
+- name: Stop here for hosts that are off — the report lists them as DOWN
+  ansible.builtin.meta: end_host
+  when: alive.unreachable | default(false)
+
+- name: Run the health SQL as SYSDBA
+  ansible.builtin.shell: |
+    . ~/.bash_profile >/dev/null 2>&1
+    export ORACLE_SID={{ oracle_sid }}
+    sqlplus -s / as sysdba
+  args:
+    stdin: "{{ lookup('ansible.builtin.file', 'health.sql') }}"
+  register: health_sql
+  changed_when: false
+
+- name: Is native network encryption required by the server (sqlnet.ora)?
+  ansible.builtin.command: grep -iqE '^ *SQLNET.ENCRYPTION_SERVER *= *REQUIRED' {{ oracle_home }}/network/admin/sqlnet.ora
+  register: sqlnet_enc
+  changed_when: false
+  failed_when: false
+
+- name: Parse key|value lines
+  ansible.builtin.set_fact:
+    health: >-
+      {{ health_sql.stdout_lines | select('search', '^[a-z_0-9]+\|') | map('split', '|', 1)
+         | items2dict(key_name=0, value_name=1)
+         | combine({'net_encryption': 'REQUIRED' if sqlnet_enc.rc == 0 else 'not required'}) }}
+
+- name: Evaluate against the thresholds
+  vars:
+    is_standby: "{{ health.role is defined and 'STANDBY' in health.role }}"
+    fra: "{{ health.fra_pct | default(-1) | int }}"
+    lag: "{{ [health.apply_lag_s | default(-1) | float, health.transport_lag_s | default(-1) | float] | max }}"
+    crit: >-
+      {{ (['FRA ' ~ fra ~ ' %'] if fra | int >= fra_crit_pct else [])
+       + (['lag ' ~ lag ~ ' s'] if is_standby and lag | float >= lag_crit_s else [])
+       + (['standby dest ' ~ health.standby_dest] if not is_standby and health.standby_dest | default('none') not in ['none', 'VALID'] else [])
+       + (['wallet ' ~ health.wallet ~ ' with ' ~ health.encrypted_ts ~ ' encrypted tablespaces'] if health.encrypted_ts | default('0') | int > 0
+            and health.wallet | default('') is not search('^OPEN/AUTOLOGIN') else [])
+       + (['no backup for ' ~ health.backup_age_h ~ ' h'] if inventory_hostname in groups['backup_hosts']
+            and (health.backup_age_h | default(-1) | float < 0 or health.backup_age_h | float > backup_max_h) else [])
+       + (['SQL output missing'] if health.role is not defined else []) }}
+    warn: >-
+      {{ (['FRA ' ~ fra ~ ' %'] if fra_warn_pct <= fra | int < fra_crit_pct else [])
+       + (['tablespaces > 85 %: ' ~ health.ts_over_85] if health.ts_over_85 | default('0') is not search('^0') else [])
+       + (['invalid objects ' ~ health.invalid_objects] if health.invalid_objects | default('0') | int > 0 else [])
+       + (['no TDE (no encrypted tablespace)'] if health.encrypted_ts | default('0') | int == 0 else [])
+       + (['failed logons 1h ' ~ health.failed_logons_1h] if health.failed_logons_1h | default('0') | int > failed_logons_warn else [])
+       + (['network encryption not required'] if health.net_encryption != 'REQUIRED' else []) }}
+  ansible.builtin.set_fact:
+    health_status:
+      level: "{{ 'CRIT' if crit | length > 0 else ('WARN' if warn | length > 0 else 'OK') }}"
+      reasons: "{{ crit + warn }}"

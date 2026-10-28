@@ -1,0 +1,6 @@
+# Thresholds for the health check (status OK / WARN / CRIT per host)
+fra_warn_pct: 80
+fra_crit_pct: 90
+lag_crit_s: 300            # FSFO lag limit in this lab is 30 s; 5 min means apply has stopped
+backup_max_h: 26           # daily level 1 + slack
+failed_logons_warn: 10     # per hour — the observer bug produced ~300 an hour
