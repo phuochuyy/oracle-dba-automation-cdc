@@ -10,6 +10,20 @@ db_roles:
       - select on bank.cards
       - select on bank.transactions
 
+  - name: cdc_rw
+    pdb: ggrepl
+    host: prm3
+    object_grants:
+      - insert on app.cdc_events
+      - update on app.cdc_events
+      - delete on app.cdc_events
+      - select on app.cdc_events
+  - name: cdc_ro
+    pdb: orclpdb2
+    host: prm1
+    object_grants:
+      - select on app.cdc_events
+
 db_users:
   - name: report_ro
     pdb: secpdb
@@ -34,3 +48,17 @@ db_users:
     roles: [select_catalog_role, audit_viewer]
     system_privs: [create session]
     container_data: all
+
+  # CDC lab (03-cdc): a writer on the source side, a reader on the GoldenGate target side
+  - name: cdc_writer
+    pdb: ggrepl
+    host: prm3
+    profile: default
+    roles: [cdc_rw]
+    system_privs: [create session]
+  - name: cdc_reader
+    pdb: orclpdb2
+    host: prm1
+    profile: default
+    roles: [cdc_ro]
+    system_privs: [create session]

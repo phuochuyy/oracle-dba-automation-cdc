@@ -1,5 +1,5 @@
 # Database roles/users as code. usage (from 01-ansible/):
-#   ansible-playbook playbooks/users.yml --vault-password-file ~/.vault_pass_dba
+#   ansible-playbook playbooks/users.yml       (vault password file: see ansible.cfg)
 - name: Roles and users
   hosts: db
   gather_facts: false
