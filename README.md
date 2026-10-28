@@ -3,6 +3,8 @@
 > Status: **planned**. Automation of routine DBA work across the lab VMs, and change data capture
 > out of Oracle as an alternative to GoldenGate.
 
+Interview prep notes: [INTERVIEW.md](INTERVIEW.md).
+
 ## Goal
 
 1. Automate routine DBA checks and tasks across all lab VMs with Ansible.

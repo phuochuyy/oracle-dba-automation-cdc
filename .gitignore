@@ -4,3 +4,8 @@
 *.sso
 lab.env
 *.env
+# Ansible Vault files and the vault password stay out of git (vault.yml.example shows the keys)
+vault.yml
+.vault_pass
+# local virtualenv
+.venv/
