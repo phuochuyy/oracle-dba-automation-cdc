@@ -1,0 +1,66 @@
+# Every Oracle home in the central inventory of a host: does it exist, who owns it, which patches.
+# Runs as the connecting user; opatch only for homes this user owns (grid homes: second play as grid).
+- name: Is the host up?
+  ansible.builtin.ping:
+  register: alive
+
+- name: Stop for hosts that are off
+  ansible.builtin.meta: end_host
+  when: alive.unreachable | default(false)
+
+- name: Central inventory location
+  ansible.builtin.shell: grep -h '^inventory_loc=' /etc/oraInst.loc | cut -d= -f2
+  register: inv_loc
+  changed_when: false
+
+- name: Read inventory.xml
+  ansible.builtin.slurp:
+    src: "{{ inv_loc.stdout }}/ContentsXML/inventory.xml"
+  register: inv_xml
+
+- name: Homes registered (removed ones excluded)
+  ansible.builtin.set_fact:
+    homes: >-
+      {{ inv_xml.content | b64decode
+         | regex_findall('<HOME NAME="([^"]+)" LOC="([^"]+)"(?![^>]*REMOVED="T")') }}
+
+- name: Stat each home
+  ansible.builtin.stat:
+    path: "{{ item[1] }}"
+  loop: "{{ homes }}"
+  register: home_stat
+
+# owner of the opatch binary, not of the home directory: a grid home's top directory belongs to root
+- name: Stat OPatch in each home
+  ansible.builtin.stat:
+    path: "{{ item[1] }}/OPatch/opatch"
+  loop: "{{ homes }}"
+  register: opatch_stat
+
+- name: opatch lspatches (homes whose OPatch belongs to {{ ansible_user }})
+  ansible.builtin.shell: "{{ item.item[1] }}/OPatch/opatch lspatches -oh {{ item.item[1] }}"
+  loop: "{{ opatch_stat.results }}"
+  when: item.stat.exists and item.stat.pw_name == ansible_user
+  register: lspatches
+  changed_when: false
+  failed_when: false
+  loop_control:
+    label: "{{ item.item[1] }}"
+
+# one fact per connecting user (patch_inv_oracle, patch_inv_grid): the grid play must not overwrite the
+# oracle one (it did in the first version)
+- name: Collect per home
+  ansible.builtin.set_fact:
+    "patch_inv_{{ ansible_user }}": "{{ lookup('ansible.builtin.vars', 'patch_inv_' ~ ansible_user, default={}) | combine({r.item.item[1]: {
+        'exists': home_stat.results[idx].stat.exists,
+        'owner': r.item.stat.pw_name | default(home_stat.results[idx].stat.pw_name | default('-')),
+        'checked': r.rc is defined,
+        'patches': (r.stdout_lines | default([]) | select('search', '^[0-9]+;') | map('regex_replace', '\\s*\\(.*$', '') | list)
+                   if r.rc is defined and r.rc == 0 else
+                   (['opatch failed'] if r.rc is defined else
+                   ([] if home_stat.results[idx].stat.exists else ['MISSING on disk — stale inventory entry'])) }}) }}"
+  loop: "{{ lspatches.results }}"
+  loop_control:
+    label: "{{ r.item.item[1] }}"
+    loop_var: r
+    index_var: idx
