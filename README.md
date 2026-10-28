@@ -3,8 +3,6 @@
 > Status: **done** — Ansible across the 8 lab VMs (health check, patch inventory, users as code), a
 > Python daily report, and Debezium CDC measured side by side with GoldenGate on the same source rows.
 
-Interview prep notes: [INTERVIEW.md](INTERVIEW.md).
-
 ## Goal
 
 1. Automate routine DBA checks and tasks across all lab VMs with Ansible.

@@ -9,3 +9,5 @@ vault.yml
 .vault_pass
 # local virtualenv
 .venv/
+# interview preparation notes: kept on my machine only
+INTERVIEW.md
