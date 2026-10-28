@@ -44,3 +44,10 @@
 - My leak check printed `leaks=1` after the push: the regex `"[^"]{8,}"` also matched the vault *key*
   `"c##dbzuser"`, which of course is in the SQL/JSON. Re-checked each password value alone (and the git
   history for the connector password): 0. The check now reads the vault as YAML and tests values only.
+
+## Review before interviews (branch `fix/vault-password-file`)
+
+- Dry-running the demos: `ansible-playbook playbooks/health.yml` failed with "Attempting to decrypt but no
+  vault secrets found". The vault I added for users-as-code lives in `group_vars/all`, so every playbook
+  loads it. `vault_password_file` in `ansible.cfg` (path to a file outside the repo). The README command
+  had been broken since the users playbook — only found because I re-ran every demo.
