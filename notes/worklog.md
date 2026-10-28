@@ -23,3 +23,11 @@
 
 - Kept the vault encrypted *and* git-ignored; the vault password file is `~/.vault_pass_dba` (600).
 - Checked idempotency the hard way: second run `changed=0`, then a grant revoked by hand came back alone.
+
+## Python daily report (branch `python/daily-report`)
+
+- python-oracledb **thin mode refused by orcl**: `DPY-3001` (native network encryption is thick-only) —
+  a direct consequence of the security lab's `SQLNET.ENCRYPTION_SERVER = REQUIRED`. Instant Client
+  (basic lite, downloaded without login) + thick mode; TLS would be the long-term answer.
+- `DPI-1047 libnnz.so` → `LD_LIBRARY_PATH` in a wrapper.
+- GG REST: 9100 is the ServiceManager; the admin server is on 127.0.0.1:9101.
