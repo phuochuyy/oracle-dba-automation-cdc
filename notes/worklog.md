@@ -31,3 +31,13 @@
   (basic lite, downloaded without login) + thick mode; TLS would be the long-term answer.
 - `DPI-1047 libnnz.so` → `LD_LIBRARY_PATH` in a wrapper.
 - GG REST: 9100 is the ServiceManager; the admin server is on 127.0.0.1:9101.
+
+## CDC (branches `cdc/source-setup`, `cdc/kafka-debezium`, `cdc/latency`)
+
+- `ORA-32588`: GoldenGate's schema-level supplemental logging already covered the new table.
+- `archive.apache.org` unreachable → Kafka 4.3.2 from the CDN; all downloads checksum-verified.
+- Kafka 4: `controller.quorum.voters` refused with `--standalone`; `--property` → `--formatter-property`.
+- Connector status RUNNING, task actually failed: `ORA-01950` — flush table goes into the PDB.
+- Low-latency polling: no effect. CPU via `V$SESSTAT` of the connector user: 0 (wrong place — MSnn
+  background processes); measured whole-VM CPU instead.
+- `kill -9` of Connect: 77 duplicate events, 0 lost.

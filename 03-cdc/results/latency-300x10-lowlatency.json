@@ -1,0 +1,35 @@
+{
+  "mode": "latency",
+  "action": null,
+  "rows": 300,
+  "rate_per_s": 10.0,
+  "seq_range": [
+    5492000,
+    5492300
+  ],
+  "events": [],
+  "debezium": {
+    "received": 300,
+    "missing": 0,
+    "duplicated_rows": 0,
+    "extra_events": 0,
+    "p50_ms": 2401,
+    "p95_ms": 3752,
+    "p99_ms": 4152,
+    "max_ms": 4253,
+    "mean_ms": 2366
+  },
+  "goldengate": {
+    "received": 300,
+    "missing": 0,
+    "p50_ms": 3806,
+    "p95_ms": 4610,
+    "p99_ms": 5001,
+    "max_ms": 5301,
+    "mean_ms": 3786
+  },
+  "config": "lowlatency",
+  "prm3_busy_cpu_s": 4.4,
+  "elapsed_s": 44,
+  "prm3_busy_cores_avg": 0.1
+}
