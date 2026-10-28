@@ -10,3 +10,11 @@
 - Apply-off drill: FSFO kept saying SYNCHRONIZED — only the lag check shows apply has stopped.
 - The 22:19 run coincided with ORA-01017 bursts on Region A: bisected the health SQL on the standby
   (0 new failures per statement and for the whole script); documented in the security lab (finding 1b).
+
+## Patch inventory (branch `ansible/patch-inventory`)
+
+- Grid home top directory is owned by root → my owner check said "not mine" for grid. Owner of the
+  `OPatch/opatch` file instead.
+- Same fact name in the oracle play and the grid play → the grid play replaced the oracle results on RAC
+  hosts. One fact per connecting user.
+- Found two stale homes in prm1's inventory (old GoldenGate paths) — documented, not detached.

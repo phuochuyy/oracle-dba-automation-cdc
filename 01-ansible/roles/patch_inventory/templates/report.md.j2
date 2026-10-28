@@ -1,0 +1,34 @@
+# Patch inventory — {{ now(fmt='%Y-%m-%d %H:%M') }}
+
+| Host | Home | Owner | Patches / state |
+|------|------|-------|-----------------|
+{% for h in groups['db'] + groups['observers'] %}
+{%   set v = hostvars[h] %}
+{%   if v.patch_inv_oracle is defined %}
+{#     a home checked by its owner wins over the other user's "not mine" entry #}
+{%     set ns2 = namespace(all={}) %}
+{%     for src in [v.patch_inv_oracle, v.patch_inv_grid | default({})] %}
+{%       for loc, p in src.items() if p.checked or loc not in ns2.all %}
+{%         set _ = ns2.all.update({loc: p}) %}
+{%       endfor %}
+{%     endfor %}
+{%     for loc, p in ns2.all | dictsort %}
+| {{ h }} | `{{ loc }}` | {{ p.owner }} | {{ p.patches | join('<br>') if p.patches else ('no patches' if p.checked else 'not checked') }} |
+{%     endfor %}
+{%   else %}
+| {{ h }} | - | - | DOWN (VM off) |
+{%   endif %}
+{% endfor %}
+
+## Drift — database homes
+
+{% set ns = namespace(levels={}) %}
+{% for h in groups['db'] if hostvars[h].patch_inv_oracle is defined %}
+{%   set dbh = hostvars[h].patch_inv_oracle.get(hostvars[h].oracle_home, {}) %}
+{%   set key = (dbh.patches | default(['?'])) | join(' + ') %}
+{%   set _ = ns.levels.update({key: (ns.levels.get(key, []) + [h])}) %}
+{% endfor %}
+{% for level, hosts in ns.levels.items() %}
+- {{ hosts | join(', ') }}: {{ level }}
+{% endfor %}
+{{ 'All running database homes are on the same patch level.' if ns.levels | length == 1 else '**Database homes differ in patch level.**' }}
