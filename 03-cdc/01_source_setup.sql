@@ -56,5 +56,9 @@ grant select on sys.v_$mystat to c##dbzuser container = all;
 grant select on sys.v_$statname to c##dbzuser container = all;
 -- only the captured table: SELECT for the snapshot, FLASHBACK for the consistent (AS OF SCN) snapshot read
 alter session set container = ggrepl;
+-- the connector creates its flush table LOG_MINING_FLUSH in the PDB, not in the root: first run failed with
+-- ORA-01950 (no quota on USERS in GGREPL) — the same small tablespace is needed here
+create tablespace logminer_tbs datafile '/u02/oradata/ORCL3/ggrepl_logminer_tbs01.dbf' size 20m autoextend on next 10m maxsize 200m;
+alter user c##dbzuser default tablespace logminer_tbs quota unlimited on logminer_tbs;
 grant select, flashback on app.cdc_events to c##dbzuser;
 exit
