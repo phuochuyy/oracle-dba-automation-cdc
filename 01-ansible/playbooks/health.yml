@@ -1,0 +1,24 @@
+# Health check of every database host that is running; hosts that are off are listed as DOWN.
+# usage (from 01-ansible/): ansible-playbook playbooks/health.yml
+- name: Collect health of the lab databases
+  hosts: db
+  gather_facts: false
+  ignore_unreachable: true
+  roles:
+    - oracle_health
+
+- name: Write the report on the controller
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Report file
+      ansible.builtin.template:
+        src: ../roles/oracle_health/templates/report.md.j2
+        dest: "../results/health-{{ now(fmt='%Y%m%d-%H%M') }}.md"
+        mode: "0644"
+      register: report
+
+    - name: Summary
+      ansible.builtin.debug:
+        msg: "{{ lookup('ansible.builtin.file', report.dest) | regex_findall('^\\| (?:prm|stb).*$', multiline=True) }}"
