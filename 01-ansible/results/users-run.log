@@ -1,0 +1,14 @@
+# run 1 (create) and run 2 (no change): see README
+# drift: grant revoked by hand
+Session altered.
+Revoke succeeded.
+"msg": "secpdb: ['CHANGED: grant select on bank.accounts to bank_read']"
+prm1                       : ok=4    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+# report_ro reads CARDS (redaction from the security lab applies)
+   CARD_ID PAN
+---------- ------------------
+	 1 ************0018
+	 2 ************0026
+  ACCOUNTS
+----------
+     30000

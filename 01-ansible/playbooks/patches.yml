@@ -1,0 +1,35 @@
+# Patch inventory of every Oracle home on every running host, and patch-level drift between hosts.
+# usage (from 01-ansible/): ansible-playbook playbooks/patches.yml
+- name: Homes owned by oracle (database, client, GoldenGate)
+  hosts: db:observers
+  gather_facts: false
+  ignore_unreachable: true
+  roles:
+    - patch_inventory
+
+- name: Grid homes, as grid
+  hosts: rac
+  gather_facts: false
+  ignore_unreachable: true
+  remote_user: grid
+  vars:
+    ansible_user: grid
+  tasks:
+    - name: opatch lspatches on the grid home
+      ansible.builtin.include_role:
+        name: patch_inventory
+
+- name: Report
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Write results/patches-<time>.md
+      ansible.builtin.template:
+        src: ../roles/patch_inventory/templates/report.md.j2
+        dest: "../results/patches-{{ now(fmt='%Y%m%d-%H%M') }}.md"
+        mode: "0644"
+      register: report
+    - name: Show it
+      ansible.builtin.debug:
+        msg: "{{ lookup('ansible.builtin.file', report.dest).splitlines() }}"

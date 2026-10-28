@@ -43,6 +43,37 @@ stb1 **CRIT, apply lag 68 s**, open mode `READ ONLY` (no `WITH APPLY`) — while
 ([`results/health-20261028-2259.md`](results/health-20261028-2259.md); its WARN is 11 failed logons in the
 hour: the open ORA-01017 finding of the security lab).
 
+## Patch inventory — [`playbooks/patches.yml`](playbooks/patches.yml)
+
+Reads every home from the central inventory (`inventory.xml`), checks it exists, and runs
+`opatch lspatches` as the user that owns `OPatch` (a second play connects as `grid` for the grid homes).
+Result ([`results/`](results/), `patches-*.md`):
+
+- database, grid and client homes on all running hosts: **RU 23.26.1** (`38743669`, OCW `38743688`); grid
+  homes also ACFS/RHP/Micronaut updates — **no drift** between hosts
+- GoldenGate homes: no OPatch patches (GoldenGate 23ai MA is upgraded by installing a new home)
+- **prm1: two stale inventory entries** — `/u01/app/oracle/goldengate` and `/u02/ogg_shared/gg_software`
+  are registered but no longer on disk (old GoldenGate installs). Left as they are; cleanup is
+  `runInstaller -detachHome ORACLE_HOME=<path>` as the inventory owner, after checking nothing uses them.
+
+## Roles and users as code — [`playbooks/users.yml`](playbooks/users.yml)
+
+Desired state in [`group_vars/all/users.yml`](group_vars/all/users.yml) (role `bank_read` with SELECT on the
+BANK tables, user `report_ro` with profile `sec_admin_profile`), passwords in an **Ansible Vault** file that
+is not in git ([`vault.yml.example`](group_vars/all/vault.yml.example); vault password file outside the
+repo). The role renders one PL/SQL block per PDB that only executes what is missing and prints
+`CHANGED: <statement>` (the password masked); the SQL goes on stdin with `no_log`, so the password is
+neither in `ps` nor in the Ansible output. Password set on creation only (like `update_password: on_create`).
+
+| Run | Result |
+|-----|--------|
+| 1 | role created, 5 grants, user created, `create session`, role granted — `changed=1` |
+| 2 | `in desired state` — **`changed=0`** |
+| drift: `revoke select on bank.accounts from bank_read` by hand, run 3 | only `grant select on bank.accounts to bank_read` — [`results/users-run.log`](results/users-run.log) |
+
+`report_ro` then reads `CARDS` and gets `************0018`: the redaction policy from the security lab
+applies, since the role has no `CARD_FULL_VIEW`.
+
 ## Mistakes on the way
 
 - First run counted failed logons over 24 h: 488–1,034 per host, nearly all from before the observer fix
@@ -54,5 +85,8 @@ hour: the open ORA-01017 finding of the security lab).
   the command line are strings. And my first "drill report" was the previous normal report, picked by
   `ls -t` after the failed run — caught because it showed lag 0 and the 300 s threshold. Thresholds are cast
   now, and the drill file is only saved if it shows the drill threshold.
+- Patch inventory, first run: the grid homes showed "owned by root" (the top directory of a grid home
+  belongs to root — the owner of `OPatch/opatch` is what counts), and the grid play overwrote the oracle
+  play's fact on the same host. Owner from the opatch binary now, one fact per user, merged in the report.
 - Side effect: the run at 22:19 lined up with the security lab's open ORA-01017 finding — bisected my SQL
   (not the cause) and found the failures come with standby→primary connection bursts; written up there.
