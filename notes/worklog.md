@@ -18,3 +18,8 @@
 - Same fact name in the oracle play and the grid play → the grid play replaced the oracle results on RAC
   hosts. One fact per connecting user.
 - Found two stale homes in prm1's inventory (old GoldenGate paths) — documented, not detached.
+
+## Users as code (branch `ansible/user-provisioning`)
+
+- Kept the vault encrypted *and* git-ignored; the vault password file is `~/.vault_pass_dba` (600).
+- Checked idempotency the hard way: second run `changed=0`, then a grant revoked by hand came back alone.

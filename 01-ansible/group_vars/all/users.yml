@@ -1,0 +1,19 @@
+# Database roles and users wanted in the lab (desired state). Passwords: vault_user_passwords (vault.yml).
+db_roles:
+  - name: bank_read
+    pdb: secpdb
+    host: prm1
+    object_grants:            # SELECT only; CARDS.PAN stays redacted for this role (no CARD_FULL_VIEW)
+      - select on bank.branches
+      - select on bank.customers
+      - select on bank.accounts
+      - select on bank.cards
+      - select on bank.transactions
+
+db_users:
+  - name: report_ro
+    pdb: secpdb
+    host: prm1
+    profile: sec_admin_profile
+    roles: [bank_read]
+    system_privs: [create session]
