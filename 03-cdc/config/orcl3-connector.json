@@ -14,5 +14,6 @@
   "schema.history.internal.kafka.bootstrap.servers": "localhost:9092",
   "schema.history.internal.kafka.topic": "schema-history.orcl3",
   "decimal.handling.mode": "string",
-  "time.precision.mode": "connect"
+  "time.precision.mode": "connect",
+  "heartbeat.interval.ms": "60000"
 }

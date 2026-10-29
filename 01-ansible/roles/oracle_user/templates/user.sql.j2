@@ -22,6 +22,15 @@ begin
      and owner || '.' || table_name = upper('{{ g.split(' on ')[1] }}');
   if n = 0 then ex('grant {{ g }} to {{ r.name }}'); end if;
 {%   endfor %}
+  -- the list is the whole truth for the role: an object grant that is not in it is revoked
+  -- (added 2026-10-30, when Privilege Analysis showed bank_read never used its grant on bank.cards)
+  for g in (select lower(privilege) || ' on ' || lower(owner) || '.' || lower(table_name) grant_text,
+                   privilege, owner, table_name
+              from dba_tab_privs where grantee = upper('{{ r.name }}')) loop
+    if g.grant_text not in ({% for og in r.object_grants %}'{{ og | lower }}'{{ ', ' if not loop.last }}{% endfor %}) then
+      ex('revoke ' || g.privilege || ' on "' || g.owner || '"."' || g.table_name || '" from {{ r.name }}');
+    end if;
+  end loop;
 {% endfor %}
 {% for u in users_here %}
   select count(*) into n from dba_users where username = upper('{{ u.name }}');
