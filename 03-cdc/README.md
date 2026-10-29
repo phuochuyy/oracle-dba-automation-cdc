@@ -76,3 +76,28 @@ idempotent (upsert by key; the primary key is the Kafka key). A clean stop commi
 
 Clean-up: test rows deleted at the source and replicated (0 rows on both sides); table, users, connector
 kept for a re-run. Stop the stack with `./cdc.sh stop` (Kafka + Connect use ~1.5 GB RAM).
+
+## Re-run 2026-10-29
+
+**The connector did not start:** `The connector is trying to read change stream starting at
+OracleOffsetContext [scn=32596543 ...], but this is no longer available`. That SCN was in archived log
+419 (10-28 23:30), deleted by Region B's housekeeping job — `delete archivelog all` under the RMAN
+deletion policy, which keeps logs a **registered GoldenGate capture** still needs, but knows nothing about
+Debezium. A real difference for operations: Debezium's restart position is only as safe as the archived-log
+retention; GoldenGate's is protected by the database.
+
+Recovery: `PUT /connectors/orcl3-cdc/stop`, `DELETE .../offsets`, `PUT .../resume` → new snapshot
+(consumers see every row of the table again), streaming from SCN 33089070.
+
+| Run | Debezium p50 / p95 / max | GoldenGate p50 / p95 / max | lost |
+|-----|--------------------------|----------------------------|------|
+| [latency, 1st](results/latency-300x10-rerun-20261029.json) | 2.19 / 3.62 / 4.24 s | 3.98 / **12.54** / 13.98 s | 0 / 0 |
+| [latency, 2nd](results/latency-300x10-rerun-20261029-b.json) | 2.31 / 3.79 / 4.31 s | 3.32 / 4.32 / 4.66 s | 0 / 0 |
+| [kill -9 of Connect](results/restart-kill-rerun-20261029.json) | 300 received, **83 duplicates**, max 22.2 s | max 4.9 s | 0 / 0 |
+
+Debezium as before (first run: p50 2.4 s, 77 duplicates). GoldenGate's first run had a 12.5 s tail — right
+after the lab switched scenario, with prm1 using 3.4 GB of swap; the second run was back to the old range.
+I keep both rather than only the good one.
+
+To do for a real setup: alert on the connector state and keep archived logs at least as long as the
+longest connector outage you accept (or have the housekeeping job keep logs newer than the connector's SCN).

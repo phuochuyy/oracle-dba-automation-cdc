@@ -51,3 +51,12 @@
   vault secrets found". The vault I added for users-as-code lives in `group_vars/all`, so every playbook
   loads it. `vault_password_file` in `ansible.cfg` (path to a file outside the repo). The README command
   had been broken since the users playbook — only found because I re-ran every demo.
+
+## 2026-10-29 — re-run
+
+- My health check reported a primary as OK 19 s before it hung on a full disk group: I had trusted
+  `V$RECOVERY_FILE_DEST` as "the FRA". Now the disk group is checked too (Ansible and Python).
+- Debezium could not resume: its offset SCN was in a log my own housekeeping job had deleted. The job
+  protects GoldenGate's logs (RMAN knows the capture), not Debezium's.
+- The vault re-encryption for the password rotation failed once ("vault-ids default,default") and left a
+  decrypted copy on disk until I re-ran it and shredded the copy.

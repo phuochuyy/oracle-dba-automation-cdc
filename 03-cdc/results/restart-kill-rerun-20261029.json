@@ -1,0 +1,34 @@
+{
+  "mode": "restart",
+  "action": "kill",
+  "rows": 300,
+  "rate_per_s": 10.0,
+  "seq_range": [
+    70480000,
+    70480300
+  ],
+  "events": [
+    " 10.0 s  Kafka Connect KILL (pid 90263)",
+    " 20.0 s  Kafka Connect start"
+  ],
+  "debezium": {
+    "received": 300,
+    "missing": 0,
+    "duplicated_rows": 83,
+    "extra_events": 83,
+    "p50_ms": 7319,
+    "p95_ms": 20737,
+    "p99_ms": 21936,
+    "max_ms": 22237,
+    "mean_ms": 8841
+  },
+  "goldengate": {
+    "received": 300,
+    "missing": 0,
+    "p50_ms": 3376,
+    "p95_ms": 4427,
+    "p99_ms": 4816,
+    "max_ms": 4938,
+    "mean_ms": 3432
+  }
+}
