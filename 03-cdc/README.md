@@ -101,3 +101,17 @@ I keep both rather than only the good one.
 
 To do for a real setup: alert on the connector state and keep archived logs at least as long as the
 longest connector outage you accept (or have the housekeeping job keep logs newer than the connector's SCN).
+
+## Check 2026-10-30 (after a cold start and a switch to scenario `gg`)
+
+The connector resumed by itself this time — its offset was a few hours old and those archived logs were still
+there (the failure of 10-29 came after a day). Two latency runs:
+
+| Run | Debezium p50 / p95 / max | GoldenGate p50 / p95 / max | lost |
+|-----|--------------------------|----------------------------|------|
+| [1st after the switch](results/latency-300x10-check-20261030.json) | 2.36 / 3.83 / 4.46 s | 3.09 / **10.31** / 11.80 s | 0 / 0 |
+| [2nd](results/latency-300x10-check-20261030-b.json) | 2.35 / 3.81 / 4.11 s | 3.89 / 4.88 / 5.18 s | 0 / 0 |
+
+Same pattern as 10-29: the **first** GoldenGate run after a scenario switch has a 10–12 s tail, the second does
+not (prm1 had 3.9 GB of swap in use — memory paged back in). For a demo: one warm-up run, then measure.
+
