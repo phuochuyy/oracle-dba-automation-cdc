@@ -115,3 +115,20 @@ there (the failure of 10-29 came after a day). Two latency runs:
 Same pattern as 10-29: the **first** GoldenGate run after a scenario switch has a 10–12 s tail, the second does
 not (prm1 had 3.9 GB of swap in use — memory paged back in). For a demo: one warm-up run, then measure.
 
+## Heartbeat (2026-10-30) — the fix for "offset no longer available"
+
+On 10-29 the connector could not resume because its offset stayed at the SCN of the last change to
+`APP.CDC_EVENTS`; with no changes for a day, the archived log of that SCN was deleted. Debezium's
+`heartbeat.interval.ms` (here 60 s, [`config/orcl3-connector.json`](config/orcl3-connector.json), no
+`heartbeat.action.query`, so nothing is written to the database or replicated by GoldenGate) commits the
+mined position even when the table is idle. Measured, with no change to the table:
+
+| | Offset SCN |
+|---|---|
+| no heartbeat, 01:57:03 → 01:59:03 | 33405139 → 33405139 (stuck) |
+| heartbeat on, +1 / +2 / +3 min | 33405139 → 33411186 → 33420160 (database at 33425533) |
+
+`__debezium-heartbeat.orcl3` got 3 messages; a 60-row run afterwards: 60 received, 0 lost, p50 2.34 s
+([`results/latency-60x10-heartbeat-20261030.json`](results/latency-60x10-heartbeat-20261030.json)). The archived
+logs still have to outlive the longest connector outage — the heartbeat only covers an idle table.
+
