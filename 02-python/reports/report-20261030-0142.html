@@ -1,0 +1,28 @@
+<!doctype html><meta charset='utf-8'><title>Lab daily report</title><style>body{font-family:sans-serif;margin:24px;color:#222}table{border-collapse:collapse;margin:8px 0}td,th{border:1px solid #ccc;padding:4px 8px;font-size:13px}th{background:#f2f2f2}</style><h1>Lab daily report — 2026-10-30 01:42</h1>
+<p><b>1 CRIT</b>, 4 WARN. Thresholds: FRA 80/90 %, lag 300 s, backup 26 h, failed logons 10/h (from 01-ansible).</p>
+<h2>Databases</h2>
+<table>
+<tr><th>DB</th><th>Region</th><th>Role / open mode</th><th>FSFO (target, observer)</th><th>Lag apply/transport s</th><th>FRA % (disk group)</th><th>Backup age h</th><th>Keystore</th><th>Encrypted conn</th><th>Status</th></tr>
+<tr><td>orcl</td><td>A</td><td>PRIMARY / READ WRITE</td><td>SYNCHRONIZED (orcl_stb, obs-r1.rac)</td><td>- / -</td><td>25 (36)</td><td>151.9</td><td>OPEN/AUTOLOGIN</td><td>AES256</td><td><b>OK</b></td></tr>
+<tr><td>orcl_stb</td><td>A</td><td>PHYSICAL STANDBY / READ ONLY WITH APPLY</td><td>SYNCHRONIZED (orcl_stb, obs-r1.rac)</td><td>0.0 / 0.0</td><td>31 (33)</td><td>12.5</td><td>OPEN/AUTOLOGIN</td><td>AES256</td><td><b>WARN</b></td></tr>
+<tr><td>orcl3</td><td>B</td><td>PRIMARY / READ WRITE</td><td>DISABLED (-, -)</td><td>- / -</td><td>71 (-)</td><td>4.5</td><td>NOT_AVAILABLE/UNKNOWN</td><td>no</td><td><b>CRIT</b></td></tr>
+<tr><td>orcl3_stb</td><td>B</td><td><b>DOWN</b></td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>ORA-12170: Cannot connect. TCP connect timeout of 3s for host 192.168.107.10 port 1521. (C</td></tr>
+</table>
+<h2>Findings</h2>
+<li><b>WARN</b> orcl_stb: 2 archived logs in the FRA not managed by it (never auto-deleted)</li>
+<li><b>WARN</b> orcl_stb: 12 failed logons in 1 h</li>
+<li><b>CRIT</b> orcl3: standby destination DEFERRED</li>
+<li><b>WARN</b> orcl3: no TDE</li>
+<li><b>WARN</b> orcl3: connection not encrypted</li>
+<h2>Failed logons, last 24 h (top sources)</h2>
+<li>orcl: 1017 (empty) from stb1.rac: 46; 1017 DBSNMP from prm1.rac: 8; 1017 (empty) from prm1.rac: 8</li>
+<li>orcl_stb: 1017 (empty) from stb1.rac: 54; 1017 (empty) from prm1.rac: 17; 1017 DBSNMP from prm1.rac: 4</li>
+<li>orcl3: 1017 C##DBZUSER from prm3.rac: 1; 1017 C##MON from prm3.rac: 1; 1017 C##DGADMIN from prm3.rac: 1</li>
+<h2>GoldenGate</h2>
+<table>
+<tr><th>Deployment</th><th>Node</th><th>Process</th><th>Status</th><th>Lag s</th></tr>
+<tr><td>GG_A</td><td>prm1</td><td>extract EXTA</td><td>running</td><td>0</td></tr>
+<tr><td>GG_A</td><td>prm1</td><td>replicat REPA</td><td>running</td><td>0</td></tr>
+<tr><td>GG_B</td><td>prm3</td><td>extract EXTB</td><td>running</td><td>3</td></tr>
+<tr><td>GG_B</td><td>prm3</td><td>replicat REPB</td><td>running</td><td>0</td></tr>
+</table>
