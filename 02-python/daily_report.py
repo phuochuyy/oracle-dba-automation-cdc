@@ -31,6 +31,11 @@ DB_SQL = {
     "dest": "select nvl(max(status || decode(error, null, '', ' ' || error)), 'none') from v$archive_dest "
             "where dest_id > 1 and destination is not null and status <> 'INACTIVE' and target = 'STANDBY'",
     "fra": "select round(space_used / nullif(space_limit, 0) * 100) from v$recovery_file_dest",
+    # the view above only counts files the FRA manages; on 2026-10-29 it said 16 % while +FRA was full
+    "fra_dg": "select round((1 - free_mb / nullif(total_mb, 0)) * 100) from v$asm_diskgroup "
+              "where '+' || name = (select upper(value) from v$parameter where name = 'db_recovery_file_dest')",
+    "arch_unmanaged": "select count(*) from v$archived_log where deleted = 'NO' and is_recovery_dest_file = 'NO' "
+                      "and name like (select value from v$parameter where name = 'db_recovery_file_dest') || '%'",
     "backup": "select round((sysdate - max(end_time)) * 24, 1) from v$rman_backup_job_details "
               "where status like 'COMPLETED%' and input_type in ('DB FULL', 'DB INCR')",
     "wallet": "select status || '/' || wallet_type from v$encryption_wallet where con_id = 1",
@@ -81,7 +86,7 @@ def check_db(t, password, th):
          r["observer"]) = cur.execute(DB_SQL["db"]).fetchone()
         lags = {n: interval_s(v) for n, v in cur.execute(DB_SQL["lag"]).fetchall()}
         r["apply_lag"], r["transport_lag"] = lags.get("apply lag"), lags.get("transport lag")
-        for k in ("dest", "fra", "backup", "wallet", "enc_ts", "ts85", "invalid", "failed_1h", "net"):
+        for k in ("dest", "fra", "fra_dg", "arch_unmanaged", "backup", "wallet", "enc_ts", "ts85", "invalid", "failed_1h", "net"):
             r[k] = one(DB_SQL[k])
         r["failed_top"] = [x[0] for x in cur.execute(DB_SQL["failed_top"]).fetchall()]
     standby = "STANDBY" in r["role"]
@@ -90,6 +95,12 @@ def check_db(t, password, th):
         r["crit"].append(f"FRA {r['fra']} %")
     elif r["fra"] is not None and r["fra"] >= th["fra_warn_pct"]:
         r["warn"].append(f"FRA {r['fra']} %")
+    if r["fra_dg"] is not None and r["fra_dg"] >= th["fra_crit_pct"]:
+        r["crit"].append(f"FRA disk group {r['fra_dg']} % full")
+    elif r["fra_dg"] is not None and r["fra_dg"] >= th["fra_warn_pct"]:
+        r["warn"].append(f"FRA disk group {r['fra_dg']} % full")
+    if r["arch_unmanaged"]:
+        r["warn"].append(f"{r['arch_unmanaged']} archived logs in the FRA not managed by it (never auto-deleted)")
     if standby and lag >= th["lag_crit_s"]:
         r["crit"].append(f"lag {lag:.0f} s")
     if not standby and r["dest"] not in ("none", "VALID"):
@@ -149,7 +160,7 @@ def render(dbs, ggs, th, now):
           f"**{crit} CRIT**, {sum(len(d['warn']) for d in dbs)} WARN. Thresholds: FRA {th['fra_warn_pct']}/"
           f"{th['fra_crit_pct']} %, lag {th['lag_crit_s']} s, backup {th['backup_max_h']} h, failed logons "
           f"{th['failed_logons_warn']}/h (from 01-ansible).", "", "## Databases", "",
-          "| DB | Region | Role / open mode | FSFO (target, observer) | Lag apply/transport s | FRA % | "
+          "| DB | Region | Role / open mode | FSFO (target, observer) | Lag apply/transport s | FRA % (disk group) | "
           "Backup age h | Keystore | Encrypted conn | Status |",
           "|----|--------|------------------|-------------------------|------------------------|-------|"
           "--------------|----------|----------------|--------|"]
@@ -160,7 +171,7 @@ def render(dbs, ggs, th, now):
         st = "CRIT" if d["crit"] else ("WARN" if d["warn"] else "OK")
         md.append(f"| {d['unique']} | {d['region']} | {d['role']} / {d['open_mode']} | {d['fsfo']} "
                   f"({fmt(d['fsfo_target'])}, {fmt(d['observer'])}) | {fmt(d['apply_lag'])} / "
-                  f"{fmt(d['transport_lag'])} | {fmt(d['fra'])} | {fmt(d['backup'])} | {d['wallet']} | "
+                  f"{fmt(d['transport_lag'])} | {fmt(d['fra'])} ({fmt(d['fra_dg'])}) | {fmt(d['backup'])} | {d['wallet']} | "
                   f"{'AES256' if d['net'] else 'no'} | **{st}** |")
     md += ["", "## Findings", ""]
     for d in dbs:
