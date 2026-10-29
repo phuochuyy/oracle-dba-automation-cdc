@@ -1,0 +1,8 @@
+# users.yml after removing 'select on bank.cards' from bank_read (2026-10-30)
+## run 1
+CHANGED: revoke SELECT on "BANK"."CARDS" from bank_read
+prm1 ok=4 changed=1 failed=0
+prm3 ok=4 changed=0 failed=0
+## run 2
+prm1 ok=4 changed=0 failed=0
+prm3 ok=4 changed=0 failed=0
