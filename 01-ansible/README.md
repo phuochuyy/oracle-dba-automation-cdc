@@ -90,3 +90,13 @@ applies, since the role has no `CARD_FULL_VIEW`.
   play's fact on the same host. Owner from the opatch binary now, one fact per user, merged in the report.
 - Side effect: the run at 22:19 lined up with the security lab's open ORA-01017 finding — bisected my SQL
   (not the cause) and found the failures come with standby→primary connection bursts; written up there.
+
+## Re-run 2026-10-29 — the health check missed a full disk group
+
+The 17:19 run reported orcl **OK, FRA 16 %**
+([`results/health-20261029-1719-19s-before-fra-hang.md`](results/health-20261029-1719-19s-before-fra-hang.md));
+19 s later the primary hung (Stuck Archiver): `+FRA` had 208 MB free of 20 GB, filled by archived logs the
+FRA does not manage (archive destination `LOCATION=+FRA`). `V$RECOVERY_FILE_DEST` cannot see them. Added
+the disk group's own usage and a count of unmanaged archived logs: now `CRIT FRA disk group 99 % full`
+([`results/health-20261029-1735.md`](results/health-20261029-1735.md)). Same fix in the Python report.
+`users.yml` twice: changed=0 both times; patch inventory unchanged.
