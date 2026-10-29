@@ -100,3 +100,19 @@ FRA does not manage (archive destination `LOCATION=+FRA`). `V$RECOVERY_FILE_DEST
 the disk group's own usage and a count of unmanaged archived logs: now `CRIT FRA disk group 99 % full`
 ([`results/health-20261029-1735.md`](results/health-20261029-1735.md)). Same fix in the Python report.
 `users.yml` twice: changed=0 both times; patch inventory unchanged.
+
+## 2026-10-30 — users as code now also revokes
+
+The role only granted what was missing; a grant removed from `users.yml` stayed in the database. Found when
+the security lab's Privilege Analysis showed that `bank_read` (role of `report_ro`) never used `SELECT` on
+`BANK.CARDS`, the table with the card numbers: I deleted the line, ran the playbook — `changed=0`, the grant
+was still there. Now the list is the whole truth for a role: an object grant on the role that is not in
+`users.yml` is revoked ([`user.sql.j2`](roles/oracle_user/templates/user.sql.j2)). Before switching it on,
+the real grants of all three roles were compared with the file: identical, so the first run could only
+remove the one line I took out.
+
+Result ([`results/users-run-revoke.log`](results/users-run-revoke.log)): run 1 `revoke SELECT on
+"BANK"."CARDS" from bank_read` (changed=1), run 2 changed=0. In the security lab afterwards: assessment
+still 0 FAIL, check C04 "who can read BANK.CARDS" = nobody but the owner, Privilege Analysis: no unused
+privilege left for `report_ro`. Users' system privileges and role grants are still add-only.
+

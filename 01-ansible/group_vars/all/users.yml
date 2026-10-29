@@ -3,11 +3,10 @@ db_roles:
   - name: bank_read
     pdb: secpdb
     host: prm1
-    object_grants:            # SELECT only; CARDS.PAN stays redacted for this role (no CARD_FULL_VIEW)
-      - select on bank.branches
+    object_grants:            # SELECT only, and no CARDS: Privilege Analysis (security lab, 2026-10-30)
+      - select on bank.branches  # showed the reports never read it — card data needs its own role
       - select on bank.customers
       - select on bank.accounts
-      - select on bank.cards
       - select on bank.transactions
 
   - name: cdc_rw
