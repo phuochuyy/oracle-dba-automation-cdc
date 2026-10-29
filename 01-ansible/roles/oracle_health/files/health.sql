@@ -21,6 +21,12 @@ select 'standby_dest|' || nvl(max(status || decode(error, null, '', ' ' || error
   from v$archive_dest where dest_id > 1 and destination is not null and status <> 'INACTIVE' and target = 'STANDBY';
 -- FRA: filled up twice on a standby in the performance lab
 select 'fra_pct|' || nvl(round(max(space_used / nullif(space_limit, 0)) * 100), -1) from v$recovery_file_dest;
+-- ... but that view only counts files the FRA manages: on 2026-10-29 it said 16 % on orcl while +FRA was full
+-- (archived logs written with LOCATION=+FRA, not USE_DB_RECOVERY_FILE_DEST) and the primary hung
+select 'fra_dg_pct|' || nvl((select round((1 - free_mb / nullif(total_mb, 0)) * 100) from v$asm_diskgroup
+  where '+' || name = (select upper(value) from v$parameter where name = 'db_recovery_file_dest')), -1) from dual;
+select 'arch_unmanaged|' || count(*) from v$archived_log where deleted = 'NO' and is_recovery_dest_file = 'NO'
+  and name like (select value from v$parameter where name = 'db_recovery_file_dest') || '%';
 select 'ts_over_85|' || count(*) || ' ' || listagg(c.name || ':' || tablespace_name, ',') within group (order by 1)
   from cdb_tablespace_usage_metrics m join v$containers c on c.con_id = m.con_id where used_percent > 85;
 select 'invalid_objects|' || count(*) from cdb_objects where status = 'INVALID';

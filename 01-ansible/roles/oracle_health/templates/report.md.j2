@@ -1,11 +1,11 @@
 # Lab health — {{ now(fmt='%Y-%m-%d %H:%M') }}
 
-| Host | DB | Role / open mode | Status | Lag (apply/transport s) | FRA % | FSFO | Wallet | Backup age h | Net encryption | Reasons |
+| Host | DB | Role / open mode | Status | Lag (apply/transport s) | FRA % (disk group %) | FSFO | Wallet | Backup age h | Net encryption | Reasons |
 |------|----|------------------|--------|-------------------------|-------|------|--------|--------------|----------------|---------|
 {% for h in groups['db'] %}
 {%   set v = hostvars[h] %}
 {%   if v.health is defined %}
-| {{ h }} | {{ v.health.db_unique_name }} | {{ v.health.role }} / {{ v.health.open_mode }} | **{{ v.health_status.level }}** | {{ v.health.apply_lag_s }} / {{ v.health.transport_lag_s }} | {{ v.health.fra_pct }} | {{ v.health.fsfo }} | {{ v.health.wallet }} | {{ v.health.backup_age_h if h in groups['backup_hosts'] else '-' }} | {{ v.health.net_encryption }} | {{ v.health_status.reasons | join('; ') or '-' }} |
+| {{ h }} | {{ v.health.db_unique_name }} | {{ v.health.role }} / {{ v.health.open_mode }} | **{{ v.health_status.level }}** | {{ v.health.apply_lag_s }} / {{ v.health.transport_lag_s }} | {{ v.health.fra_pct }} ({{ v.health.fra_dg_pct | default('-1') }}) | {{ v.health.fsfo }} | {{ v.health.wallet }} | {{ v.health.backup_age_h if h in groups['backup_hosts'] else '-' }} | {{ v.health.net_encryption }} | {{ v.health_status.reasons | join('; ') or '-' }} |
 {%   else %}
 | {{ h }} | - | - | DOWN | - | - | - | - | - | - | host not reachable (VM off in this scenario) |
 {%   endif %}
