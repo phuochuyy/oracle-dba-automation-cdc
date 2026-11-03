@@ -60,3 +60,15 @@
   protects GoldenGate's logs (RMAN knows the capture), not Debezium's.
 - The vault re-encryption for the password rotation failed once ("vault-ids default,default") and left a
   decrypted copy on disk until I re-ran it and shredded the copy.
+
+## Re-check after run 5 (branch `check/20261103`)
+
+- Health 19:45 ([`health-20261103-1945.md`](../01-ansible/results/health-20261103-1945.md)): failed=0; stb1 CRIT
+  "no backup for 50 h" — true: after the run 5 failovers the standby had no backup of its own yet (UNDO_6 never
+  backed up). After the level 0 offload, 21:31 ([`health-20261103-2131.md`](../01-ansible/results/health-20261103-2131.md)):
+  stb1 backup age 1.7 h, WARN only for the 2 archived logs outside the FRA; prm1 OK.
+- Patch inventory and `users.yml --check`: no change. Daily report 21:31: 1 CRIT (orcl3 standby destination
+  deferred — expected in this scenario), 3 WARN already known.
+- CDC 22:0x (scenario `gg`): first latency run Debezium p50 **63 s** — not a regression: the connector resumed from a
+  45 h old offset and mined 65 archived logs (3,807 MB) first. Second run 2.44 s (GoldenGate 3.64 s), 0 lost. Without
+  the second run I would have reported a 25× slowdown; checked the Connect log and `V$ARCHIVED_LOG` before writing it up.
