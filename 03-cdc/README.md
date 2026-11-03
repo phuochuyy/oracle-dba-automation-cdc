@@ -115,6 +115,23 @@ there (the failure of 10-29 came after a day). Two latency runs:
 Same pattern as 10-29: the **first** GoldenGate run after a scenario switch has a 10–12 s tail, the second does
 not (prm1 had 3.9 GB of swap in use — memory paged back in). For a demo: one warm-up run, then measure.
 
+## Check 2026-11-03 (after the HA/DR run 5, Kafka/Connect stopped for ~45 h)
+
+| Run | Debezium p50 / p95 / max | GoldenGate p50 / p95 / max | lost |
+|-----|--------------------------|----------------------------|------|
+| [1st after the start](results/latency-300x10-r5-20261103.json) | **63.10 / 76.49 / 77.96 s** | 3.86 / 8.45 / 9.93 s | 0 / 0 |
+| [2nd](results/latency-300x10-r5-20261103-b.json) | 2.44 / 3.87 / 4.10 s | 3.64 / 4.57 / 5.45 s | 0 / 0 |
+
+The connector resumed from its offset (SCN 34,015,694, 11-02 01:xx) with no snapshot — but between that SCN and the
+start of the run there were **65 archived logs, 3,807 MB of redo** to mine first
+([`results/resume-catchup-r5-20261103.txt`](results/resume-catchup-r5-20261103.txt)). The first 300 rows waited
+behind that backlog (63 s median); once caught up, the second run is back to the usual 2.4 s. GoldenGate's first-run
+tail (9.9 s) is the same warm-up effect as on 10-30.
+
+For operations: the heartbeat keeps the offset fresh only while Connect is running. After a long stop the connector
+needs every archived log since its offset (they were still on disk here, unlike on 10-29), and its lag after a
+restart is proportional to the redo written meanwhile — a reason to alert on Debezium lag, not only on its task state.
+
 ## Heartbeat (2026-10-30) — the fix for "offset no longer available"
 
 On 10-29 the connector could not resume because its offset stayed at the SCN of the last change to

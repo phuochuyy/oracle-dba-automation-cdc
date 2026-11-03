@@ -1,0 +1,8 @@
+# Debezium resume after ~45 h with Kafka/Connect stopped (2026-11-03 22:03)
+[2026-11-03 22:03:21,168] INFO [orcl3-cdc|task-0] Found previous partition offset OraclePartition [sourcePartition={server=orcl3}]: {commit_scn=34015702:1:03002100a6060000, txSeq=1, txId=03000800a7060000, snapshot_scn=33089070, scn=34015694} (io.debezium.conne
+[2026-11-03 22:03:21,980] INFO [orcl3-cdc|task-0] Snapshot ended with SnapshotResult [status=SKIPPED, offset=OracleOffsetContext [scn=34015694, txId=03000800a7060000, txSeq=1, commit_scn=["34015702:1:03002100a6060000"], lcr_position=null]] (io.debezium.pipelin
+[2026-11-03 22:03:22,002] INFO [orcl3-cdc|task-0] Starting streaming (io.debezium.pipeline.ChangeEventSourceCoordinator:346)
+
+# orcl3 archived logs (dest 1) Debezium had to mine from its offset SCN 34015694 to the start of the run
+logs=65 MB=3807 first=2026-11-02 01:02 last=2026-11-03 22:00 (v$archived_log, next_change# > 34015694)
+current_scn at query time: 35725894
