@@ -10,6 +10,7 @@ Routine DBA work automated across the lab servers, and change data capture with 
 
 ## Where to look
 
+- [Strategy](docs/strategy.md)
 - [Ansible](01-ansible/README.md)
 - [Python report](02-python/README.md)
 - [CDC](03-cdc/README.md)
