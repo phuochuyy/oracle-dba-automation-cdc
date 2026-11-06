@@ -43,7 +43,7 @@ db_users:
   - name: c##mon
     pdb: cdb$root
     host: prm3
-    profile: default               # Region B was not hardened (see 01-ansible health check)
+    profile: c##svc_profile        # created by the security lab, Region B hardening
     roles: [select_catalog_role, audit_viewer]
     system_privs: [create session]
     container_data: all
@@ -52,7 +52,7 @@ db_users:
   - name: cdc_writer
     pdb: ggrepl
     host: prm3
-    profile: default
+    profile: sec_svc_profile
     roles: [cdc_rw]
     system_privs: [create session]
   - name: cdc_reader
