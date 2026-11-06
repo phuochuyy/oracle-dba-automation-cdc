@@ -5,7 +5,7 @@
 set -eu
 D=${CDC_HOME:-$HOME/opt/cdc}
 CFG=$(cd "$(dirname "$0")" && pwd)/config
-export JAVA_HOME=$(ls -d $D/jdk-21*)
+JAVA_HOME=$(ls -d "$D"/jdk-21*); export JAVA_HOME
 K=$(ls -d $D/kafka_2.13-*)
 LOGS=$D/logs; mkdir -p $LOGS $D/data
 case ${1:?mode} in
