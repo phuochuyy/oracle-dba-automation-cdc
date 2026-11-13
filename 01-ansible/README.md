@@ -1,6 +1,6 @@
 # A. Ansible — health check across the lab
 
-Controller: the KVM host, `ansible-core` in a virtualenv (`~/.venvs/dba`, no system pip/sudo needed).
+Controller: the KVM host, `ansible-core` in a virtualenv (`~/work/tools/venvs/dba`, no system pip/sudo needed).
 Inventory: the 8 VMs by region and role ([`inventory.ini`](inventory.ini)), host aliases and host keys from
 `~/.ssh/config`. No secrets in the inventory. The lab never runs all 8 VMs (23 GB host), so hosts that are
 off are reported as **DOWN**, not as failures.
