@@ -20,7 +20,7 @@ running, lag 0–3 s. The 24-hour failed-logon sources still show the observer s
 
 | Choice | Why |
 |--------|-----|
-| **thick mode** (Oracle Instant Client 23.26 in `~/opt`, `LD_LIBRARY_PATH`) | thin mode got `DPY-3001: Native Network Encryption and Data Integrity is only supported in python-oracledb thick mode` from orcl — the security lab requires native encryption on the server. orcl3 (not hardened) accepted thin. Long-term: TLS (TCPS) listener endpoints, which thin mode supports |
+| **thick mode** (Oracle Instant Client 23.26 in `~/work/tools`, `LD_LIBRARY_PATH`) | thin mode got `DPY-3001: Native Network Encryption and Data Integrity is only supported in python-oracledb thick mode` from orcl — the security lab requires native encryption on the server. orcl3 (not hardened) accepted thin. Long-term: TLS (TCPS) listener endpoints, which thin mode supports |
 | `C##MON`: `CREATE SESSION`, `SELECT_CATALOG_ROLE`, `AUDIT_VIEWER`, `CONTAINER_DATA = ALL` | read-only; no `SELECT ANY DICTIONARY` (flagged by the security assessment). Created with the Ansible users-as-code role (common user in the root, so the standbys get it through redo) |
 | passwords from the **Ansible Vault** of 01-ansible | one secret store for the repo; nothing in `targets.yml` |
 | GoldenGate via REST on `127.0.0.1:9101` over SSH | the admin servers listen on localhost only (good); the node is found by asking every candidate, since GG_A moves with the Data Guard role. The REST password goes to curl as a config file on stdin (`-K`), never on a command line |

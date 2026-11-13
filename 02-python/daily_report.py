@@ -22,7 +22,7 @@ import yaml
 HERE = pathlib.Path(__file__).resolve().parent
 VAULT = HERE.parent / "01-ansible/group_vars/all/vault.yml"
 VAULT_PASS = pathlib.Path(os.environ.get("VAULT_PASS_FILE", "~/.vault_pass_dba")).expanduser()
-IC = pathlib.Path(os.environ.get("ORACLE_IC", "~/opt/instantclient_23_26")).expanduser()
+IC = pathlib.Path(os.environ.get("ORACLE_IC", "~/work/tools/instantclient_23_26")).expanduser()
 
 DB_SQL = {
     "db": "select db_unique_name, database_role, open_mode, protection_mode, fs_failover_status, "

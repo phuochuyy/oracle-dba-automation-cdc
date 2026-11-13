@@ -1,9 +1,9 @@
 #!/bin/bash
 # Start/stop the CDC stack on the lab host (no containers, no sudo): Kafka 4.3 KRaft + Kafka Connect with
-# the Debezium Oracle connector, from tarballs in ~/opt/cdc.
+# the Debezium Oracle connector, from tarballs in ~/work/tools/cdc.
 #   ./cdc.sh start | stop | status | register | delete
 set -eu
-D=${CDC_HOME:-$HOME/opt/cdc}
+D=${CDC_HOME:-$HOME/work/tools/cdc}
 CFG=$(cd "$(dirname "$0")" && pwd)/config
 JAVA_HOME=$(ls -d "$D"/jdk-21*); export JAVA_HOME
 K=$(ls -d $D/kafka_2.13-*)
@@ -26,7 +26,7 @@ stop)
   pkill -f "org.apache.kafka.connect.cli.ConnectDistributed" || true
   sleep 5; $K/bin/kafka-server-stop.sh || true ;;
 status)
-  curl -s localhost:8083/connectors?expand=status | $HOME/.venvs/dba/bin/python -m json.tool ;;
+  curl -s localhost:8083/connectors?expand=status | $HOME/work/tools/venvs/dba/bin/python -m json.tool ;;
 register)
   curl -s -X PUT -H 'Content-Type: application/json' --data @$CFG/orcl3-connector.json localhost:8083/connectors/orcl3-cdc/config; echo ;;
 delete)

@@ -5,7 +5,7 @@
   "database.dbname": "ORCL3",
   "database.pdb.name": "GGREPL",
   "database.user": "c##dbzuser",
-  "database.password": "${file:/home/huy/opt/cdc/secrets/dbz.properties:password}",
+  "database.password": "${file:/home/huy/work/tools/cdc/secrets/dbz.properties:password}",
   "topic.prefix": "orcl3",
   "table.include.list": "APP.CDC_EVENTS",
   "log.mining.strategy": "online_catalog",

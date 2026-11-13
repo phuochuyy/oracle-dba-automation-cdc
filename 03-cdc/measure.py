@@ -27,7 +27,7 @@ import oracledb
 import yaml
 
 HERE = pathlib.Path(__file__).resolve().parent
-CDC = pathlib.Path(os.environ.get("CDC_HOME", "~/opt/cdc")).expanduser()
+CDC = pathlib.Path(os.environ.get("CDC_HOME", "~/work/tools/cdc")).expanduser()
 KAFKA = next(CDC.glob("kafka_2.13-*"))
 TOPIC = "orcl3.APP.CDC_EVENTS"
 SRC = "192.168.106.10:1521/ggrepl.rac"
@@ -107,7 +107,7 @@ def main():
     rate = float(sys.argv[3]) if mode == "latency" and len(sys.argv) > 3 else 10.0
     action = sys.argv[2] if mode == "restart" and len(sys.argv) > 2 else "term"
     pw = secrets()
-    oracledb.init_oracle_client(lib_dir=str(pathlib.Path("~/opt/instantclient_23_26").expanduser()))
+    oracledb.init_oracle_client(lib_dir=str(pathlib.Path("~/work/tools/instantclient_23_26").expanduser()))
     src = oracledb.connect(user="cdc_writer", password=pw["cdc_writer"], dsn=SRC)
     tgt = oracledb.connect(user="cdc_reader", password=pw["cdc_reader"], dsn=TGT)
     lo = int(time.time()) % 100000 * 1000            # this run's SEQ range
